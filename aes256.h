@@ -12,8 +12,8 @@ enum operations {
 };
 
 unsigned char *aes_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
-                           unsigned char *iv, int *ciphertext_len);
+                           unsigned char *iv, size_t *ciphertext_len);
 
 unsigned char *aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
-                           unsigned char *iv, int plaintext_len);
+                           unsigned char *iv, size_t plaintext_len);
 void handleErrors(void);

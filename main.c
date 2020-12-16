@@ -21,8 +21,8 @@ int main (int argc, char **argv)
   struct option longOptions[] = {
     {"verbose", no_argument, 0, 'v'},
     {"help",    no_argument, 0, 'h'},
-    {"encrypt",  optional_argument, 0, 'e'},
-    {"decrypt",  optional_argument, 0, 'd'},
+    {"encrypt",  no_argument, 0, 'e'},
+    {"decrypt",  no_argument, 0, 'd'},
     {"key",  required_argument, 0, 'k'},
     {"input", required_argument, 0, 'i'},
     {"output", required_argument, 0, 'o'}
@@ -35,11 +35,11 @@ int main (int argc, char **argv)
   enum operations operation = DEFAULT;
 
   unsigned char key[KEY_LENGTH];
-  unsigned char iv[] = "1234569";
-  unsigned char input_file_path[MAX_PATH_LENGTH];
-  unsigned char output_file_path[MAX_PATH_LENGTH];
+  unsigned char iv[] = "0123456789012345";
+  char *input_file_path = NULL;
+  char *output_file_path = NULL;
 
-  if(argc <= 2) {
+  if(argc < 2) {
     USAGE(argv);
     return -1;
   }
@@ -60,9 +60,9 @@ int main (int argc, char **argv)
       break;
       
     case 'k':
-      if(strlen(optarg) > KEY_LENGTH)
+      if(strlen(optarg) != KEY_LENGTH)
       {
-        printf("Key can't be longer than %d bytes! \n", (uint8_t) KEY_LENGTH);
+        printf("Key must be %d bytes long! \n", (uint8_t) KEY_LENGTH);
         return -1;
       }
       memcpy(key, optarg, strlen(optarg));
@@ -74,7 +74,8 @@ int main (int argc, char **argv)
         printf("Input path is too long!\n");
         return -1;
       }
-      memcpy(input_file_path, optarg, strlen(optarg));
+
+      input_file_path = optarg;
       break;
 
     case 'o':
@@ -83,11 +84,12 @@ int main (int argc, char **argv)
         printf("Output path is too long!\n");
         return -1;
       }
-      memcpy(output_file_path, optarg, strlen(optarg));
+
+      output_file_path = optarg;
       break;
 
     case ':':
-
+      break;
     case '?':
       printf("Unknown argument :%c", index);
     case 'h':
@@ -101,22 +103,93 @@ int main (int argc, char **argv)
     }
   }
 
-  unsigned char *in_data, out_data;
-  uint32_t data_len, crc, cipher_len;
+  unsigned char *in_data = NULL, *out_data = NULL;
+  uint32_t crc;
+  size_t data_len, cipher_len;
   switch (operation)
   {
 
     case ENCRYPT:
-      data_len = file_read(input_file_path, in_data);
-      crc = crc32((void *)in_data, data_len);
+
+      in_data = file_read((const char *)input_file_path, &data_len);
+      if(NULL == in_data) {
+        return -1;
+      }
+
+      if(verbose) 
+        printf("data len %ld\n", data_len);
+
+      crc = crc32((const void *)in_data, data_len);
+
       out_data = aes_encrypt(in_data, data_len, key, iv, &cipher_len);
-      append_header(out_data, crc, MAGIC_NUMBER, cipher_len);
-      print_header(out_data, cipher_len);
-      file_write(output_file_path, out_data, cipher_len);
+      if(NULL == out_data) {
+        return -1;
+      }
+
+      if(verbose) 
+        printf("cipher len : %ld\n", cipher_len);
+
+      out_data = append_header(out_data, crc, (uint32_t)MAGIC_NUMBER, cipher_len, data_len); // append real size
+      if(NULL == out_data) {
+        return -1;
+      }
+
+      if(verbose) 
+        printf("Encryption completed !\n");
+
+      print_header(out_data, cipher_len + sizeof(struct header));
+      data_len = file_write((const char *)output_file_path, out_data, cipher_len + sizeof(struct header));
+
+      if(verbose) 
+        printf("data len : %ld \n", data_len);
+
+      free(in_data);
+      free(out_data);
       break;
 
     case DECRYPT:
-      //aes_decrypt();
+
+      in_data = file_read((const char *)input_file_path, &data_len);
+      if(NULL == in_data)
+      {
+        return -1;
+      }
+
+      if(verbose) 
+        printf("file length : %ld\n", data_len);
+
+      print_header(in_data, data_len);
+      struct header *header = get_header(in_data, data_len);
+      if(NULL == header) {
+        return -1;
+      }
+
+      in_data = remove_header(in_data, &data_len);
+      if(NULL == in_data)
+      {
+        return -1;
+      }
+
+      out_data = aes_decrypt(in_data, data_len , key, iv, header->size);
+      if(NULL == out_data)
+      {
+        return -1;
+      }
+      crc = crc32((const void *)out_data, header->size);
+      if(NULL == in_data)
+      {
+        return -1;
+      }
+
+      if(crc != header->crc32) {
+        printf("Bad CRC! Decryption went wrong :( \n");
+      } else {
+        printf("Decryption completed ! CRC's are equal !\n");
+      }
+      
+      free(header);
+      free(out_data);
+      free(in_data);
       break;
 
     case DEFAULT:
@@ -128,6 +201,6 @@ int main (int argc, char **argv)
       break;
 
   }
-
+  
   return 0;
 }

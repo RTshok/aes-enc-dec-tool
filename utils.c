@@ -3,23 +3,34 @@
 #include <malloc.h>
 #include <string.h>
 
-int append_header(unsigned char *in_data, uint32_t crc, uint32_t magic_number, uint32_t size)
+unsigned char *append_header(unsigned char *in_data, uint32_t crc, uint32_t magic_number, uint32_t ciphered_size, uint32_t plaintext_size)
 {
-  unsigned char *new_data = realloc(in_data, size + (uint8_t) sizeof(struct header)); // allocating new memory for header
+  unsigned char *new_data = realloc(in_data, ciphered_size + sizeof(struct header)); // allocating new memory for header
 
   if(new_data == NULL) {
     printf("Bad memory allocation ! \n");
-    return -1;
+    return NULL;
   }
 
-  in_data = new_data;
+  struct header header = {magic_number, plaintext_size, crc};
+  memcpy(&new_data[ciphered_size], (unsigned char *) &header, sizeof(struct header)); //appending header
 
-  struct header header = {magic_number, size, crc};
-  memcpy(&in_data[size + 1], (unsigned char *) &header, (uint8_t) sizeof(struct header)); //appending header
-
-  return 0;
+  return new_data;
 }
 
+unsigned char *remove_header(unsigned char *in_data, size_t *size)
+{
+  unsigned char *new_data = malloc (sizeof(unsigned char) * (*size) - sizeof(struct header));
+  if(NULL == new_data) {
+    printf("Can't allocate memory while removing header ! \n");
+    return NULL;
+  }
+  
+  memcpy(new_data, in_data, (*size) - sizeof(struct header));
+  *size = *size - sizeof(struct header);
+  free(in_data);
+  return new_data;
+}
 
 void print_header(const unsigned char *data, uint32_t size)
 {
@@ -27,17 +38,23 @@ void print_header(const unsigned char *data, uint32_t size)
   // perform validation of input data
   memcpy(&header, &data[size - sizeof(struct header)], sizeof(struct header));
 
+  printf("\n HEADER\n");
+  printf ("______________________________________________________\n\n");
   printf("magic number : %08x\n", header.magic_number);
   printf("size in bytes : %d\n", header.size);
   printf("crc32 : %08x\n", header.crc32);
+  printf ("______________________________________________________\n");
 }
 
-struct header get_header (const unsigned char * data)
+struct header *get_header (const unsigned char * data, size_t size)
 {
-  uint32_t size = strlen((char *)data);
-  struct header header = {};
+  struct header *header = malloc(sizeof(struct header));
+  if(NULL == header) {
+    printf("Can't allocate memory for header !\n");
+    return NULL;
+  }
   // perform validation of input data
-  memcpy(&header, &data[size - sizeof(struct header)], sizeof(struct header));
-
+  memcpy(header, &data[size - sizeof(struct header)], sizeof(struct header));
   return header;
 }
+

@@ -2,3 +2,6 @@
 *.o
 *.bin
 ED-tool
+bin/*
+build/*
+*.bin

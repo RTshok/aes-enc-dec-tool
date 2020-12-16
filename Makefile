@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall -g
 LDFLAGS=-lcrypto
 SOURCES= main.c aes256.c io.c utils.c 
 OBJECTS= $(SOURCES:.c=.o)
@@ -9,6 +9,9 @@ all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE):$(OBJECTS)
 		$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+		mkdir ./build ./bin
+		mv *.o ./build
+		mv $@ ./bin
 
 
 .c.o:
@@ -16,3 +19,5 @@ $(EXECUTABLE):$(OBJECTS)
 
 clean:
 		rm *.o
+		rm -r ./build
+		rm -r ./bin

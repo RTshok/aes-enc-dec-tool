@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/ED-tool",
-      "args": [],
+      "args": ["-e", "-k 12345678", "-i ${workspaceFolder}/input.bin", "-o ${workspaceFolder}/output.bin"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
