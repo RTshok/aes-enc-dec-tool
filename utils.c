@@ -34,7 +34,7 @@ void print_header(const unsigned char *data, uint32_t size)
 
 struct header get_header (const unsigned char * data)
 {
-  uint32_t size = strlen(data);
+  uint32_t size = strlen((char *)data);
   struct header header = {};
   // perform validation of input data
   memcpy(&header, &data[size - sizeof(struct header)], sizeof(struct header));

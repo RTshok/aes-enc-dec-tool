@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-c -wAll
-LDFLAGS=
+CFLAGS=-c -Wall
+LDFLAGS=-lcrypto
 SOURCES= main.c aes256.c io.c utils.c 
 OBJECTS= $(SOURCES:.c=.o)
 EXECUTABLE=ED-tool
@@ -8,8 +8,11 @@ EXECUTABLE=ED-tool
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE):$(OBJECTS)
-		$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+		$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 
 
 .c.o:
 		$(CC) $(CFLAGS) $< -o $@
+
+clean:
+		rm *.o

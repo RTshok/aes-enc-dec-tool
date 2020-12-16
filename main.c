@@ -11,14 +11,13 @@
 
 #define MAGIC_NUMBER 0xDEADBEEF
 
-#define USAGE(argv) printf("Usage : %s -e (for encrypt) -d (for decrypt) -k <256 bit key> -i <input path> -o <output path> \n", argv[0]); \
-                    printf("-h for help \n -v for help\n"); \
-                    printf("long arguments present: --encrypt \n --decrypt \n --key \n --input \n --output \n --verbose \n --help\n");
+#define USAGE(argv) printf("Usage : %s -e (for encrypt) -d (for decrypt) -k <256 bit key> -i <input path> -o <output path>", argv[0]); \
+                    printf("-h for help -v for verbose\n"); \
+                    printf("long arguments present:\n --encrypt \n --decrypt \n --key \n --input \n --output \n --verbose \n --help\n");
 
 
 int main (int argc, char **argv)
 {
-
   struct option longOptions[] = {
     {"verbose", no_argument, 0, 'v'},
     {"help",    no_argument, 0, 'h'},
@@ -36,9 +35,14 @@ int main (int argc, char **argv)
   enum operations operation = DEFAULT;
 
   unsigned char key[KEY_LENGTH];
-  unsigned char *iv = "1234569";
+  unsigned char iv[] = "1234569";
   unsigned char input_file_path[MAX_PATH_LENGTH];
   unsigned char output_file_path[MAX_PATH_LENGTH];
+
+  if(argc <= 2) {
+    USAGE(argv);
+    return -1;
+  }
 
   while((index = getopt_long(argc, argv, "vhedk:i:o:", longOptions, &longOptIndex)) != -1) {
 
@@ -98,20 +102,21 @@ int main (int argc, char **argv)
   }
 
   unsigned char *in_data, out_data;
-  uint32_t data_len, crc;
+  uint32_t data_len, crc, cipher_len;
   switch (operation)
   {
 
     case ENCRYPT:
       data_len = file_read(input_file_path, in_data);
       crc = crc32((void *)in_data, data_len);
-      aes_encrypt(in_data, data_len, key, iv, out_data);
-      append_header(out_data, crc, MAGIC_NUMBER, strlen(out_data));
-      print_header(out_data, strlen(out_data));
+      out_data = aes_encrypt(in_data, data_len, key, iv, &cipher_len);
+      append_header(out_data, crc, MAGIC_NUMBER, cipher_len);
+      print_header(out_data, cipher_len);
+      file_write(output_file_path, out_data, cipher_len);
       break;
 
     case DECRYPT:
-      aes_decrypt();
+      //aes_decrypt();
       break;
 
     case DEFAULT:

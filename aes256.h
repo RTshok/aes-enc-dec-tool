@@ -3,6 +3,7 @@
 #include <openssl/err.h>
 
 #define KEY_LENGTH 32
+#define AES_BLOCK_SIZE 16
 
 enum operations {
   DEFAULT = 0,
@@ -10,8 +11,9 @@ enum operations {
   DECRYPT
 };
 
-int aes_encrypt (const unsigned char *data, int data_len, const unsigned char *key,
-                 const unsigned char *iv, unsigned char *ciphered_data);
+unsigned char *aes_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+                           unsigned char *iv, int *ciphertext_len);
 
-int aes_decrypt (const unsigned char *data, int data_len, const unsigned char *key,
-                 const unsigned char *iv, unsigned char *ciphered_data);
+unsigned char *aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
+                           unsigned char *iv, int plaintext_len);
+void handleErrors(void);
