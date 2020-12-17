@@ -123,7 +123,7 @@ int main(int argc, char **argv)
   size_t         data_len = 0, cipher_len = 0;
   switch (operation) {
     case ENCRYPT:
-
+      //input read
       in_data = file_read((const char *)input_file_path, &data_len);
       if (NULL == in_data) {
         return EXIT_FAILURE;
@@ -131,8 +131,10 @@ int main(int argc, char **argv)
 
       if (verbose) printf("input data length %ld\n", data_len);
 
+      //crc calculation
       crc = crc32((const void *)in_data, data_len);
 
+      //encryption
       out_data = aes_encrypt(in_data, data_len, key, iv, &cipher_len);
       if (NULL == out_data) {
         free(in_data);
@@ -143,6 +145,7 @@ int main(int argc, char **argv)
 
       if (verbose) printf("ciphered package length : %ld\n", cipher_len);
 
+      //creating and appending header to data
       out_data = append_header(&out_data, crc, (uint32_t)MAGIC_NUMBER, cipher_len, data_len);  // append real size
       if (NULL == out_data) {
         return EXIT_FAILURE;
@@ -150,6 +153,7 @@ int main(int argc, char **argv)
 
       if (verbose) printf("Encryption completed !\n");
 
+      //printing header
       print_header(out_data, cipher_len + sizeof(struct header));
       data_len = file_write((const char *)output_file_path, out_data, cipher_len + sizeof(struct header));
 

@@ -39,10 +39,10 @@ unsigned char *remove_header(unsigned char **in_data, size_t *size)
   return new_data;
 }
 
-void print_header(const unsigned char *data, uint32_t size)
+void print_header(const unsigned char *in_data, size_t size)
 {
   struct header header = {};
-  memcpy(&header, &data[size - sizeof(struct header)], sizeof(struct header));
+  memcpy(&header, &in_data[size - sizeof(struct header)], sizeof(struct header));
 
   printf("\n HEADER\n");
   printf("______________________________________________________\n\n");
@@ -52,13 +52,13 @@ void print_header(const unsigned char *data, uint32_t size)
   printf("______________________________________________________\n");
 }
 
-struct header *get_header(const unsigned char *data, size_t size)
+struct header *get_header(const unsigned char *in_data, size_t size)
 {
   struct header *header = malloc(sizeof(struct header));
   if (NULL == header) {
     printf("Can't allocate memory for header !\n");
     return NULL;
   }
-  memcpy(header, &data[size - sizeof(struct header)], sizeof(struct header));
+  memcpy(header, &in_data[size - sizeof(struct header)], sizeof(struct header));
   return header;
 }
