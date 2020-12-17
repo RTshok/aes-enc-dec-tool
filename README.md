@@ -101,4 +101,7 @@ Usage : `./format.sh`
 
 `Ubuntu 19.10`
 
+## Untracked usecases
+
+Workability of tool wasn't tested on devices with low amount of RAM on board. In that case, tool should be optimized for working directly with files block-by-block.
 
