@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall -g -Iinclude
+CFLAGS=-c -Wall -g -Iinclude -std=c99
 SRCDIR=src
 BUILDDIR=build
 EXECDIR=bin
