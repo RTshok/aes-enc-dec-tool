@@ -1,6 +1,7 @@
 # aes-enc-dec-tool
 ------------
 ## What it can do ?
+
 The tool can encrypt and decrypt binary files using AES-256 encryption alghorithm.
 While encrypting, it appends header [(magic number), (original file size), (CRC)] which is used when you want to decrypt your data back.
 It prints header on encryption completion.
@@ -8,7 +9,8 @@ On decryption start, the program prints out the header. On the decryption finish
 
 ----------
 ## How to build ?
-Makefile commands:
+Makefile commands
+
 `make all` - building the tool. Output directory - ./bin
 `make clean` - performs clean up of build artifacts
 
@@ -72,14 +74,17 @@ Bytes written to file: 6392
 ```
 ---------
 ## Dependencies
+
 `openssl-dev`
 `build-essential`
 ------------
 ## Formatter
+
 As formatter was used - `clang-formatter`.
 Usage : `./format.sh`
 --------
 ## Tested platforms
+
 `Ubuntu 19.10`
 
 
