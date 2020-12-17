@@ -11,12 +11,16 @@ On decryption start, the program prints out the header. On the decryption finish
 ## How to build ?
 Makefile commands
 
- - `make all` building the tool. Output directory ./bin
- - `make clean` performs clean up of build artifacts
+ - `make all` - building the tool. Output directory: ./bin
+ - `make clean` - performs clean up of build artifacts
 
 ### Usage
-`./bin/ED-tool -e -k 01234567890123456789012345678901 -i ./input.bin -o ./output.bin` - for encryption
-`./bin/ED-tool -d -k 01234567890123456789012345678901 -i ./output.bin -o ./output_decrypted.bin` - for decryption
+
+For encryption:
+`./bin/ED-tool -e -k 01234567890123456789012345678901 -i ./input.bin -o ./output.bin`
+
+For decryption:
+`./bin/ED-tool -d -k 01234567890123456789012345678901 -i ./output.bin -o ./output_decrypted.bin`
 
 ### Argument explanation
  ```
@@ -83,7 +87,9 @@ Bytes written to file: 6392
 ------------
 ## Formatter
 
-As formatter was used  `clang-formatter`
+As formatter was used : `clang-formatter`
+
+
 Usage : `./format.sh`
 
 --------
