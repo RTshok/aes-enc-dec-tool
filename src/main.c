@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 
   unsigned char key[KEY_LENGTH];
   unsigned char iv[]             = "0123456789012345";
+  
   char *        input_file_path  = NULL;
   char *        output_file_path = NULL;
 

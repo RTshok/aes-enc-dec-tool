@@ -13,11 +13,13 @@ unsigned char *aes_encrypt(unsigned char *plaintext,
   unsigned char *ciphertext   = NULL;
   int            padded_bytes = plaintext_len % AES_BLOCK_SIZE;
 
-  if (padded_bytes > 0) {
+  // https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
+  //allocating memory for future cipheredtext
+  if (padded_bytes > 0) { // in case there are remained bytes - add them to have array multiple of AES_BLOCK_SIZE
     *ciphertext_len = plaintext_len - padded_bytes + AES_BLOCK_SIZE;
     ciphertext      = malloc(sizeof(unsigned char) * (plaintext_len - padded_bytes + AES_BLOCK_SIZE));
   }
-  else if (padded_bytes == 0) {
+  else if (padded_bytes == 0) { // in case there are no remained bytes - add AES_BLOCK_SIZE
     *ciphertext_len = plaintext_len + AES_BLOCK_SIZE;
     ciphertext      = malloc(sizeof(unsigned char) * (plaintext_len + AES_BLOCK_SIZE));
   }

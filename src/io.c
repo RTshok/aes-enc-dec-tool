@@ -8,7 +8,7 @@ unsigned char *file_read(const char *file_path, size_t *file_len)
   file = fopen(file_path, "rb");
 
   if (NULL == file) {
-    printf("Can't open file at location : %s !", file_path);
+    printf("Can't open file at location : %s !\n", file_path);
     return NULL;
   }
 
@@ -39,13 +39,13 @@ unsigned char *file_read(const char *file_path, size_t *file_len)
   return data;
 }
 
-int file_write(const char *file_path, const unsigned char *data, int data_size)
+int file_write(const char *file_path, const unsigned char *data, size_t data_size)
 {
   FILE *file;
   file = fopen(file_path, "w+b");
 
   if (NULL == file) {
-    printf("Can't open file at location : %s!", file_path);
+    printf("Can't open file at location : %s!\n", file_path);
     return -1;
   }
 
