@@ -73,17 +73,19 @@ Bytes written to file: 6392
 
 ```
 ---------
+
 ## Dependencies
 
 
 `openssl-dev`
 `build-essential`
+
 ------------
 ## Formatter
 
-
-As formatter was used - `clang-formatter`.
+As formatter was used  `clang-formatter`
 Usage : `./format.sh`
+
 --------
 ## Tested platforms
 
