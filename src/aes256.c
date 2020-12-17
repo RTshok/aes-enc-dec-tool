@@ -4,8 +4,6 @@
 unsigned char *aes_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
             unsigned char *iv, size_t *ciphertext_len)
 {
-
-
     unsigned char *ciphertext = NULL;
     int padded_bytes = plaintext_len % AES_BLOCK_SIZE;
     

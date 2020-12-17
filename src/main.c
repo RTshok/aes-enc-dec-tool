@@ -12,7 +12,7 @@
 #define MAGIC_NUMBER 0xDEADBEEF
 
 #define USAGE(argv) printf("Usage : %s -e (for encrypt) -d (for decrypt) -k <256 bit key> -i <input path> -o <output path>", argv[0]); \
-                    printf("-h for help -v for verbose\n"); \
+                    printf(" -h - prints help -v - verbose\n"); \
                     printf("long arguments present:\n --encrypt \n --decrypt \n --key \n --input \n --output \n --verbose \n --help\n");
 
 
@@ -27,6 +27,13 @@ int main (int argc, char **argv)
     {"input", required_argument, 0, 'i'},
     {"output", required_argument, 0, 'o'}
   };
+
+  struct required_args {
+    bool key;
+    bool input_path;
+    bool output_path;
+  }req_args;
+  memset(&req_args, 0, sizeof(struct required_args));
 
   int index, longOptIndex = 0;
   extern int opterr, optopt;
@@ -65,6 +72,7 @@ int main (int argc, char **argv)
         printf("Key must be %d bytes long! \n", (uint8_t) KEY_LENGTH);
         return -1;
       }
+      req_args.key = true;
       memcpy(key, optarg, strlen(optarg));
       break;
 
@@ -74,7 +82,7 @@ int main (int argc, char **argv)
         printf("Input path is too long!\n");
         return -1;
       }
-
+      req_args.input_path = true;
       input_file_path = optarg;
       break;
 
@@ -84,23 +92,42 @@ int main (int argc, char **argv)
         printf("Output path is too long!\n");
         return -1;
       }
-
+      req_args.output_path = true;
       output_file_path = optarg;
       break;
 
-    case ':':
     case '?':
-      printf("Unknown argument :%c", index);
+      printf("Command unknown, check if data passed with argument : -%c\n", optopt);
     case 'h':
       USAGE(argv);
-      break;  
+      return -1; 
 
     default:
-      printf("Unknown argument :%c", index);
+      printf("Unknown argument : -%c\n", optopt);
       USAGE(argv);
-      break;
+      return -1;
     }
   }
+
+  if(!req_args.input_path)
+  {
+    printf("-i parameter is mandatory !\n");
+    return -1;
+  }
+
+  if(!req_args.output_path)
+  {
+    printf("-o parameter is mandatory !\n");
+    return -1;
+  }
+
+  if(!req_args.key)
+  {
+    printf("-k parameter is mandatory !\n");
+    return -1;
+  }
+
+
 
   unsigned char *in_data = NULL, *out_data = NULL;
   uint32_t crc;
@@ -116,7 +143,7 @@ int main (int argc, char **argv)
       }
 
       if(verbose) 
-        printf("data len %ld\n", data_len);
+        printf("input data length %ld\n", data_len);
 
       crc = crc32((const void *)in_data, data_len);
 
@@ -126,7 +153,7 @@ int main (int argc, char **argv)
       }
 
       if(verbose) 
-        printf("cipher len : %ld\n", cipher_len);
+        printf("ciphered package length : %ld\n", cipher_len);
 
       out_data = append_header(out_data, crc, (uint32_t)MAGIC_NUMBER, cipher_len, data_len); // append real size
       if(NULL == out_data) {
@@ -140,7 +167,7 @@ int main (int argc, char **argv)
       data_len = file_write((const char *)output_file_path, out_data, cipher_len + sizeof(struct header));
 
       if(verbose) 
-        printf("data len : %ld \n", data_len);
+        printf("package + header length : %ld \n", data_len);
 
       free(in_data);
       free(out_data);
@@ -155,7 +182,7 @@ int main (int argc, char **argv)
       }
 
       if(verbose) 
-        printf("file length : %ld\n", data_len);
+        printf("input data length : %ld\n", data_len);
 
       print_header(in_data, data_len);
       struct header *header = get_header(in_data, data_len);
@@ -164,6 +191,9 @@ int main (int argc, char **argv)
       }
 
       in_data = remove_header(in_data, &data_len);
+      if(verbose)
+        printf("data length without header : %ld", data_len);
+      
       if(NULL == in_data)
       {
         return -1;
@@ -174,7 +204,11 @@ int main (int argc, char **argv)
       {
         return -1;
       }
+
       crc = crc32((const void *)out_data, header->size);
+      if(verbose)
+        printf("crc after decryption : %08x\n", crc);
+
       if(NULL == in_data)
       {
         return -1;
@@ -186,13 +220,17 @@ int main (int argc, char **argv)
         printf("Decryption completed ! CRC's are equal !\n");
       }
       
+      data_len = file_write((const char *)output_file_path, out_data, header->size);
+      if(verbose)
+        printf("Bytes written to file: %ld\n", data_len);
+
       free(header);
       free(out_data);
       free(in_data);
       break;
 
     default:
-      printf("No operation detected! Exit ! \n");
+      printf("No operation detected! Choose -d for decryption or -e for encryption! \n");
       break;
 
   }
