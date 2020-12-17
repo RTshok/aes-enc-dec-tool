@@ -3,12 +3,14 @@
 #include <malloc.h>
 #include <string.h>
 
-unsigned char *append_header(unsigned char *in_data, uint32_t crc, uint32_t magic_number, uint32_t ciphered_size, uint32_t plaintext_size)
+unsigned char *append_header(unsigned char **in_data, uint32_t crc, uint32_t magic_number, uint32_t ciphered_size, uint32_t plaintext_size)
 {
-  unsigned char *new_data = realloc(in_data, ciphered_size + sizeof(struct header)); // allocating new memory for header
+  unsigned char *new_data = realloc(*in_data, ciphered_size + sizeof(struct header)); // allocating new memory for header
 
   if(new_data == NULL) {
     printf("Bad memory allocation ! \n");
+    free(*in_data);
+    *in_data = NULL;
     return NULL;
   }
 
@@ -18,17 +20,18 @@ unsigned char *append_header(unsigned char *in_data, uint32_t crc, uint32_t magi
   return new_data;
 }
 
-unsigned char *remove_header(unsigned char *in_data, size_t *size)
+unsigned char *remove_header(unsigned char **in_data, size_t *size)
 {
-  unsigned char *new_data = malloc (sizeof(unsigned char) * (*size) - sizeof(struct header));
+  unsigned char *new_data = malloc (sizeof(unsigned char) * (*size) - sizeof(struct header)); // create new buffer without a header
   if(NULL == new_data) {
     printf("Can't allocate memory while removing header ! \n");
     return NULL;
   }
   
-  memcpy(new_data, in_data, (*size) - sizeof(struct header));
+  memcpy(new_data, *in_data, (*size) - sizeof(struct header));
   *size = *size - sizeof(struct header);
-  free(in_data);
+  free(*in_data); // free old data
+  *in_data = NULL;
   return new_data;
 }
 

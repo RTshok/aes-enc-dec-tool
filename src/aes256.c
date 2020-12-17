@@ -1,4 +1,7 @@
-// encrypt / decrypt operations
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+
 #include "aes256.h"
 
 unsigned char *aes_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,

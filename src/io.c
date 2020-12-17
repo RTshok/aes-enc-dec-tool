@@ -1,6 +1,6 @@
 #include "io.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 unsigned char *file_read(const char *file_path, size_t *file_len)
 {
@@ -13,6 +13,7 @@ unsigned char *file_read(const char *file_path, size_t *file_len)
     return NULL;
   }
 
+  
   fseek(file, 0L, SEEK_END);
   size_t size = ftell(file);
   fseek(file, 0L, SEEK_SET);
