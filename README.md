@@ -3,8 +3,11 @@
 ## What it can do ?
 
 The tool can encrypt and decrypt binary files using AES-256 encryption alghorithm.
+
 While encrypting, it appends header [(magic number), (original file size), (CRC)] which is used when you want to decrypt your data back.
+
 It prints header on encryption completion.
+
 On decryption start, the program prints out the header. On the decryption finish it compares CRC in the header and CRC of decrypted data.
 
 ----------
