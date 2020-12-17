@@ -1,93 +1,98 @@
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
-
 #include "aes256.h"
 
-unsigned char *aes_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
-            unsigned char *iv, size_t *ciphertext_len)
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+
+unsigned char *aes_encrypt(unsigned char *plaintext,
+                           int            plaintext_len,
+                           unsigned char *key,
+                           unsigned char *iv,
+                           size_t *       ciphertext_len)
 {
-    unsigned char *ciphertext = NULL;
-    int padded_bytes = plaintext_len % AES_BLOCK_SIZE;
-    
-    if(padded_bytes > 0) {
-      *ciphertext_len = plaintext_len - padded_bytes + AES_BLOCK_SIZE;
-      ciphertext = malloc(sizeof(unsigned char) * (plaintext_len - padded_bytes + AES_BLOCK_SIZE));
-    } else if (padded_bytes == 0) {
-      *ciphertext_len = plaintext_len + AES_BLOCK_SIZE;
-      ciphertext = malloc (sizeof(unsigned char) * (plaintext_len + AES_BLOCK_SIZE));
-    }
+  unsigned char *ciphertext   = NULL;
+  int            padded_bytes = plaintext_len % AES_BLOCK_SIZE;
 
-    if(ciphertext == NULL)
-    {
-      printf("bad alloc !\n");
-      return NULL;
-    }
+  if (padded_bytes > 0) {
+    *ciphertext_len = plaintext_len - padded_bytes + AES_BLOCK_SIZE;
+    ciphertext      = malloc(sizeof(unsigned char) * (plaintext_len - padded_bytes + AES_BLOCK_SIZE));
+  }
+  else if (padded_bytes == 0) {
+    *ciphertext_len = plaintext_len + AES_BLOCK_SIZE;
+    ciphertext      = malloc(sizeof(unsigned char) * (plaintext_len + AES_BLOCK_SIZE));
+  }
 
-    EVP_CIPHER_CTX *ctx;
-    
-    /* Create and initialise the context */
-    if(!(ctx = EVP_CIPHER_CTX_new())) {
-      goto error;
-    }
+  if (ciphertext == NULL) {
+    printf("bad alloc !\n");
+    return NULL;
+  }
 
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) {
-      goto error;
-    }
-        
-    int len;
-    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len)) {
-      goto error;
-    }
+  EVP_CIPHER_CTX *ctx;
 
-    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) {
-      goto error;
-    }
-  
-    /* Clean up */
-    EVP_CIPHER_CTX_free(ctx);
+  /* Create and initialise the context */
+  if (!(ctx = EVP_CIPHER_CTX_new())) {
+    goto error;
+  }
 
-    return ciphertext;
+  if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) {
+    goto error;
+  }
 
-    error:
-      ERR_print_errors_fp(stderr);
-      free(ciphertext);
-      return NULL;
+  int len;
+  if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len)) {
+    goto error;
+  }
+
+  if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) {
+    goto error;
+  }
+
+  /* Clean up */
+  EVP_CIPHER_CTX_free(ctx);
+
+  return ciphertext;
+
+error:
+  ERR_print_errors_fp(stderr);
+  free(ciphertext);
+  return NULL;
 }
 
 
-unsigned char *aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
-                           unsigned char *iv, size_t plaintext_len)
+unsigned char *aes_decrypt(unsigned char *ciphertext,
+                           int            ciphertext_len,
+                           unsigned char *key,
+                           unsigned char *iv,
+                           size_t         plaintext_len)
 {
-    
-    unsigned char *plaintext = malloc (sizeof(unsigned char) * ciphertext_len); 
+  unsigned char *plaintext = malloc(sizeof(unsigned char) * ciphertext_len);
 
-    EVP_CIPHER_CTX *ctx;
-    /* Create and initialise the context */
-    if(!(ctx = EVP_CIPHER_CTX_new())) {
-      goto error;
-    }
+  EVP_CIPHER_CTX *ctx;
+  /* Create and initialise the context */
+  if (!(ctx = EVP_CIPHER_CTX_new())) {
+    goto error;
+  }
 
-    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) {
-      goto error;
-    }
-    
-    int len;
-    if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
-      goto error;
-    }
+  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) {
+    goto error;
+  }
 
-    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) {
-      goto error;
-    }
+  int len;
+  if (1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
+    goto error;
+  }
 
-    /* Clean up */
-    EVP_CIPHER_CTX_free(ctx);
+  if (1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) {
+    goto error;
+  }
 
-    return plaintext;
+  /* Clean up */
+  EVP_CIPHER_CTX_free(ctx);
 
-    error:
-      ERR_print_errors_fp(stderr);
-      free(plaintext);
-      return NULL;
+  return plaintext;
+
+error:
+  ERR_print_errors_fp(stderr);
+  free(plaintext);
+  return NULL;
 }
