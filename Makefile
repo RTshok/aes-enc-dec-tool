@@ -1,23 +1,23 @@
 CC=gcc
-CFLAGS=-c -Wall -g
+CFLAGS=-c -Wall -g -Iinclude
+SRCDIR=src
+BUILDDIR=build
+EXECDIR=bin
 LDFLAGS=-lcrypto
-SOURCES= main.c aes256.c io.c utils.c 
-OBJECTS= $(SOURCES:.c=.o)
+SOURCES = $(wildcard $(SRCDIR)/*.c)
+OBJECTS = $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
 EXECUTABLE=ED-tool
 
-all: $(SOURCES) $(EXECUTABLE)
+all: clean dir $(SOURCES) $(EXECDIR)/$(EXECUTABLE)
 
-$(EXECUTABLE):$(OBJECTS)
-		$(CC) $(OBJECTS) $(LDFLAGS) -o $@
-		mkdir ./build ./bin
-		mv *.o ./build
-		mv $@ ./bin
+dir:
+	mkdir -p $(EXECDIR) $(BUILDDIR)
 
+$(EXECDIR)/$(EXECUTABLE):$(OBJECTS)
+		$(CC) $^ $(LDFLAGS) -o $@
 
-.c.o:
+$(OBJECTS): $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 		$(CC) $(CFLAGS) $< -o $@
 
 clean:
-		rm *.o
-		rm -r ./build
-		rm -r ./bin
+		rm -rf $(BUILDDIR) $(EXECDIR)

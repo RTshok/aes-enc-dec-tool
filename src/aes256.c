@@ -59,7 +59,7 @@ unsigned char *aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsign
                            unsigned char *iv, size_t plaintext_len)
 {
     
-    unsigned char *plaintext = malloc (sizeof(unsigned char) * plaintext_len);
+    unsigned char *plaintext = malloc (sizeof(unsigned char) * ciphertext_len); 
 
     EVP_CIPHER_CTX *ctx;
     /* Create and initialise the context */

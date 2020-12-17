@@ -89,7 +89,6 @@ int main (int argc, char **argv)
       break;
 
     case ':':
-      break;
     case '?':
       printf("Unknown argument :%c", index);
     case 'h':
@@ -192,12 +191,8 @@ int main (int argc, char **argv)
       free(in_data);
       break;
 
-    case DEFAULT:
-
-      break;
-
     default:
-
+      printf("No operation detected! Exit ! \n");
       break;
 
   }
