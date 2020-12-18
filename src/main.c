@@ -5,10 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "aes256.h"
-#include "crc32.h"
 #include "io.h"
-#include "utils.h"
+#include "aes256.h"
 
 #define MAGIC_NUMBER 0xDEADBEEF
 
@@ -40,7 +38,7 @@ int main(int argc, char **argv)
 
   unsigned char key[KEY_LENGTH];
   unsigned char iv[]             = "0123456789012345";
-  
+
   char *        input_file_path  = NULL;
   char *        output_file_path = NULL;
 
@@ -118,103 +116,13 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-
-  unsigned char *in_data = NULL, *out_data = NULL;
-  uint32_t       crc      = 0;
-  size_t         data_len = 0, cipher_len = 0;
   switch (operation) {
     case ENCRYPT:
-      //input read
-      in_data = file_read((const char *)input_file_path, &data_len);
-      if (NULL == in_data) {
-        return EXIT_FAILURE;
-      }
-
-      if (verbose) printf("input data length %ld\n", data_len);
-
-      //crc calculation
-      crc = crc32((const void *)in_data, data_len);
-
-      //encryption
-      out_data = aes_encrypt(in_data, data_len, key, iv, &cipher_len);
-      if (NULL == out_data) {
-        free(in_data);
-        return EXIT_FAILURE;
-      }
-
-      free(in_data);  // we don't need input data anymore
-
-      if (verbose) printf("ciphered package length : %ld\n", cipher_len);
-
-      //creating and appending header to data
-      out_data = append_header(&out_data, crc, (uint32_t)MAGIC_NUMBER, cipher_len, data_len);  // append real size
-      if (NULL == out_data) {
-        return EXIT_FAILURE;
-      }
-
-      if (verbose) printf("Encryption completed !\n");
-
-      //printing header
-      print_header(out_data, cipher_len + sizeof(struct header));
-      data_len = file_write((const char *)output_file_path, out_data, cipher_len + sizeof(struct header));
-
-      if (verbose) printf("package + header length : %ld \n", data_len);
-
-      free(out_data);
+      file_encrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
       break;
 
     case DECRYPT:
-
-      in_data = file_read((const char *)input_file_path, &data_len);
-      if (NULL == in_data) {
-        return EXIT_FAILURE;
-      }
-
-      if (verbose) printf("input data length : %ld\n", data_len);
-
-      struct header *header = get_header(in_data, data_len);
-      if (NULL == header) {
-        free(in_data);
-        return EXIT_FAILURE;
-      }
-
-      if (header->magic_number != (uint32_t)MAGIC_NUMBER) {  // header validation
-        printf("Invalid header magic number! File isn't suitable! \n");
-        return EXIT_FAILURE;
-      }
-
-      print_header(in_data, data_len);
-
-      in_data = remove_header(&in_data, &data_len);
-      if (verbose) printf("data length without header : %ld\n", data_len);
-
-      if (NULL == in_data) {
-        free(in_data);
-        return EXIT_FAILURE;
-      }
-
-      out_data = aes_decrypt(in_data, data_len, key, iv, header->size);
-      free(in_data);  // we don't need input data anymore
-
-      if (NULL == out_data) {
-        return EXIT_FAILURE;
-      }
-
-      crc = crc32((const void *)out_data, header->size);
-      if (verbose) printf("crc after decryption : %08x\n", crc);
-
-      if (crc != header->crc32) {
-        printf("Bad CRC! Decryption went wrong :( \n");
-      }
-      else {
-        printf("Decryption completed ! CRC's are equal !\n");
-      }
-
-      data_len = file_write((const char *)output_file_path, out_data, header->size);
-      if (verbose) printf("Bytes written to file: %ld\n", data_len);
-
-      free(header);
-      free(out_data);
+      file_decrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
       break;
 
     default:

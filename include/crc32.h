@@ -42,6 +42,15 @@ const uint32_t crc32_tab[] = {
  * in sys/libkern.h, where it can be inlined.
  */
 
+uint32_t crc32_accum(uint32_t crc, const void *buf, size_t size)
+{
+  const uint8_t *p = (unsigned char *)buf;
+
+  uint32_t new_crc = ~crc;
+  while (size--) new_crc = crc32_tab[(new_crc ^ *p++) & 0xFF] ^ (new_crc >> 8);
+  return new_crc ^ ~0U;
+}
+
 uint32_t crc32(const void *buf, size_t size)
 {
   const uint8_t *p = (unsigned char *)buf;
