@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "io.h"
 #include "aes256.h"
+#include "io.h"
 
 #define MAGIC_NUMBER 0xDEADBEEF
 
@@ -27,6 +27,8 @@ int main(int argc, char **argv)
     bool key;
     bool input_path;
     bool output_path;
+    bool encrypt;
+    bool decrypt;
   } req_args;
   memset(&req_args, 0, sizeof(struct required_args));
 
@@ -37,10 +39,10 @@ int main(int argc, char **argv)
   enum operations operation = DEFAULT;
 
   unsigned char key[KEY_LENGTH];
-  unsigned char iv[]             = "0123456789012345";
+  unsigned char iv[] = "0123456789012345";
 
-  char *        input_file_path  = NULL;
-  char *        output_file_path = NULL;
+  char *input_file_path  = NULL;
+  char *output_file_path = NULL;
 
   if (argc < 2) {
     USAGE(argv);
@@ -54,11 +56,13 @@ int main(int argc, char **argv)
         break;
 
       case 'e':
-        operation = ENCRYPT;
+        operation        = ENCRYPT;
+        req_args.encrypt = true;
         break;
 
       case 'd':
-        operation = DECRYPT;
+        operation        = DECRYPT;
+        req_args.decrypt = true;
         break;
 
       case 'k':
@@ -101,6 +105,10 @@ int main(int argc, char **argv)
     }
   }
 
+  if (req_args.decrypt == true && req_args.encrypt == true) {
+    printf("Only one operation should be chosen ! Use only -e or only -d\n");
+    return EXIT_FAILURE;
+  }
   if (!req_args.input_path) {
     printf("-i parameter is mandatory !\n");
     return EXIT_FAILURE;
@@ -120,18 +128,16 @@ int main(int argc, char **argv)
   switch (operation) {
     case ENCRYPT:
       ret = file_encrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
-      if(ret != EXIT_SUCCESS)
-      {
-        printf ("Encryption Failed ! \n");
+      if (ret != EXIT_SUCCESS) {
+        printf("Encryption Failed ! \n");
         return EXIT_FAILURE;
       }
       break;
 
     case DECRYPT:
       ret = file_decrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
-      if(ret != EXIT_SUCCESS)
-      {
-        printf ("Decryption Failed ! \n");
+      if (ret != EXIT_SUCCESS) {
+        printf("Decryption Failed ! \n");
         return EXIT_FAILURE;
       }
       break;
