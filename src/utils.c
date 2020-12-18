@@ -1,50 +1,10 @@
 #include "utils.h"
 
-#include <malloc.h>
-#include <string.h>
-
-
 void init_header (struct header *header, uint32_t crc, uint32_t magic_number, uint32_t text_size)
 {
   header->crc32 = crc;
   header->magic_number = magic_number;
   header->size = text_size;
-}
-
-unsigned char *append_header(unsigned char **in_data,
-                             uint32_t        crc,
-                             uint32_t        magic_number,
-                             uint32_t        ciphered_size,
-                             uint32_t        plaintext_size)
-{
-  unsigned char *new_data = realloc(*in_data, ciphered_size + sizeof(struct header));  // allocating new memory for header
-
-  if (new_data == NULL) {
-    printf("Bad memory allocation ! \n");
-    free(*in_data);
-    *in_data = NULL;
-    return NULL;
-  }
-
-  struct header header = {magic_number, plaintext_size, crc};
-  memcpy(&new_data[ciphered_size], (unsigned char *)&header, sizeof(struct header));  //appending header
-
-  return new_data;
-}
-
-unsigned char *remove_header(unsigned char **in_data, size_t *size)
-{
-  unsigned char *new_data = malloc(sizeof(unsigned char) * (*size) - sizeof(struct header));  // create new buffer without a header
-  if (NULL == new_data) {
-    printf("Can't allocate memory while removing header ! \n");
-    return NULL;
-  }
-
-  memcpy(new_data, *in_data, (*size) - sizeof(struct header));
-  *size = *size - sizeof(struct header);
-  free(*in_data);  // free old data
-  *in_data = NULL;
-  return new_data;
 }
 
 void print_header(struct header *header)
@@ -57,13 +17,3 @@ void print_header(struct header *header)
   printf("______________________________________________________\n");
 }
 
-struct header *get_header(const unsigned char *in_data, size_t size)
-{
-  struct header *header = malloc(sizeof(struct header));
-  if (NULL == header) {
-    printf("Can't allocate memory for header !\n");
-    return NULL;
-  }
-  memcpy(header, &in_data[size - sizeof(struct header)], sizeof(struct header));
-  return header;
-}

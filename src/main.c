@@ -116,19 +116,30 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  int ret = 0;
   switch (operation) {
     case ENCRYPT:
-      file_encrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
+      ret = file_encrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
+      if(ret != EXIT_SUCCESS)
+      {
+        printf ("Encryption Failed ! \n");
+        return EXIT_FAILURE;
+      }
       break;
 
     case DECRYPT:
-      file_decrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
+      ret = file_decrypt(input_file_path, output_file_path, iv, key, (unsigned int)MAGIC_NUMBER, verbose);
+      if(ret != EXIT_SUCCESS)
+      {
+        printf ("Decryption Failed ! \n");
+        return EXIT_FAILURE;
+      }
       break;
 
     default:
       printf("No operation detected! Choose -d for decryption or -e for encryption! \n");
-      break;
+      return EXIT_FAILURE;
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 }
