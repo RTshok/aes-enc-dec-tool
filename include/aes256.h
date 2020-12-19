@@ -6,6 +6,7 @@
 
 #define KEY_LENGTH     32
 #define AES_BLOCK_SIZE 16
+#define MAX_BLOCK_SIZE 8192 // low because of good fread/fwrite performance on low memory blocks
 
 enum operations { DEFAULT = 0, ENCRYPT, DECRYPT };
 
