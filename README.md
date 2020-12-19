@@ -113,7 +113,8 @@ Input file size - 100MB
 
 Encyphering when block size is default - 16 bytes
 
-``` time ./bin/ED-tool -e -i ./input.bin -o ./output.bin -k 01234567890123456789012345678901 -s 16
+``` 
+time ./bin/ED-tool -e -i ./input.bin -o ./output.bin -k 01234567890123456789012345678901 -s 16
 Size of block is default ! 16b 
 file size : 100000000 
 block amount 6250000 
@@ -128,11 +129,11 @@ ______________________________________________________
 
 real    0m29,244s
 user    0m10,194s
-sys     0m19,028s ```
+sys     0m19,028s 
 
 Encyphering when block size is 8192 bytes
 
-```time ./bin/ED-tool -e -i ./input.bin -o ./output.bin -k 01234567890123456789012345678901 -s 8192
+time ./bin/ED-tool -e -i ./input.bin -o ./output.bin -k 01234567890123456789012345678901 -s 8192
 Size of block isn't default ! Current size : 8192 
 file size : 100000000 
 block amount 12208 
@@ -147,7 +148,8 @@ ______________________________________________________
 
 real    0m0,922s
 user    0m0,595s
-sys     0m0,176s ```
+sys     0m0,176s 
+```
 
 As we can observe, the difference is enormous !
 
