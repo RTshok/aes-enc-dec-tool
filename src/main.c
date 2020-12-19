@@ -49,9 +49,6 @@ int main(int argc, char **argv)
   size_t block_size = AES_BLOCK_SIZE; // default block size
   char * errptr;
 
-  size_t block_size = AES_BLOCK_SIZE; // default block size
-  char * errptr;
-
   char *        input_file_path  = NULL;
   char *        output_file_path = NULL;
 
@@ -76,7 +73,12 @@ int main(int argc, char **argv)
         }
 
         if(!is_power_of_two(block_size)) {
-          printf("Wrong input ! Size of block should be only power of 2 (2, 4, 8, 16..)\n");
+          printf("Wrong input ! Size of block should be only power of 2 starting from (16, 32, 64...8192)\n");
+          return EXIT_FAILURE;
+        }
+        
+        if(block_size < AES_BLOCK_SIZE) {
+          printf("Size of block can't be less than %d !\n", (unsigned int) AES_BLOCK_SIZE);
           return EXIT_FAILURE;
         }
 
@@ -168,7 +170,7 @@ int main(int argc, char **argv)
   if(block_size == AES_BLOCK_SIZE) {
     printf("Size of block is default ! %db \n", (unsigned int) AES_BLOCK_SIZE);
   } else {
-    printf ("Size of block isn't default ! Current size : %d \n", block_size);
+    printf ("Size of block isn't default ! Current size : %ld \n", block_size);
   }
 
   switch (operation) {
@@ -188,6 +190,7 @@ int main(int argc, char **argv)
         printf ("Decryption Failed ! \n");
         return EXIT_FAILURE;
       }
+      
       break;
 
     default:

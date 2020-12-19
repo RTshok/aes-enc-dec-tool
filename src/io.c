@@ -2,13 +2,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "aes256.h"
 #include "crc32.h"
 #include "utils.h"
-
-#include <string.h>
-#include <stdlib.h>
 
 int file_encrypt (const char *input_file_path, const char *output_file_path, const unsigned char *iv, const unsigned char *key, unsigned int magic_number, bool verbose, size_t block_size)
 {
@@ -32,16 +30,10 @@ int file_encrypt (const char *input_file_path, const char *output_file_path, con
   size_t in_file_size = ftell(input_file);
   fseek(input_file, 0L, SEEK_SET);
 
-  unsigned int block_amount = 0;
-  unsigned int padding = in_file_size % AES_BLOCK_SIZE;
+  unsigned int block_amount = block_amount = in_file_size / block_size;
 
-  printf ("padding %d\n", padding);
-
-  if(padding > 0) {
-    block_amount = (in_file_size  / block_size) + 1; // +1 block size
-  }
-  else if (padding == 0) {
-    block_amount = in_file_size / block_size;
+  if(in_file_size % block_size > 0) {
+    block_amount++;
   }
 
   if(in_file_size < block_size) {
@@ -52,7 +44,7 @@ int file_encrypt (const char *input_file_path, const char *output_file_path, con
   unsigned char ciphered_block[block_size + AES_BLOCK_SIZE]; // ciphered block could be padded by EVP up to 16 bytes
   size_t read_len, write_len, ciphered_len;
   unsigned int crc = 0;
-  printf("file size : %d \n", in_file_size);
+  printf("file size : %ld \n", in_file_size);
   printf("block amount %d \n", block_amount);
 
   EVP_CIPHER_CTX *ctx = create_context(key, iv, ENCRYPT);
@@ -65,7 +57,7 @@ int file_encrypt (const char *input_file_path, const char *output_file_path, con
     read_len = fread(block, sizeof(unsigned char), block_size, input_file);
 
     if(verbose)
-      printf("read len : %d\n", read_len);
+      printf("read len : %ld\n", read_len);
     
     if(read_len == 0) {
       printf ("Bad fread ()!");
@@ -79,7 +71,7 @@ int file_encrypt (const char *input_file_path, const char *output_file_path, con
     ciphered_len = aes_encrypt(ctx, block, read_len, ciphered_block, (bool)(i == block_amount - 1)); // finilize in case last block
 
     if(verbose)
-      printf("encrypted len %d\n", ciphered_len);
+      printf("encrypted len %ld\n", ciphered_len);
 
     write_len = fwrite(ciphered_block, sizeof(unsigned char), ciphered_len, output_file);
     if (write_len != ciphered_len) {
@@ -90,7 +82,7 @@ int file_encrypt (const char *input_file_path, const char *output_file_path, con
     }
 
     if(verbose)
-      printf("written to file : %d\n", write_len);
+      printf("written to file : %ld\n", write_len);
     fseek(output_file, 0L, SEEK_END);
 
     memset(block, 0, block_size);
@@ -107,7 +99,7 @@ int file_encrypt (const char *input_file_path, const char *output_file_path, con
 
   fclose(input_file);
   fclose(output_file);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int file_decrypt (const char *input_file_path, const char *output_file_path, const unsigned char *iv, const unsigned char *key, unsigned int magic_number, bool verbose, size_t block_size)
@@ -154,23 +146,20 @@ int file_decrypt (const char *input_file_path, const char *output_file_path, con
   EVP_CIPHER_CTX *ctx = create_context(key, iv, DECRYPT);
   printf("size without header :%ld \n", in_file_size);
 
-  unsigned int padding = in_file_size % block_size;
-  unsigned int block_amount = 0;
-  printf ("padding %d\n", padding);
+  // encrypted file should be already padded
+  unsigned int block_amount = in_file_size / block_size; 
 
-  if(padding > 0) {
-    block_amount = (in_file_size  / block_size) + 1; // +1 block size
-  }
-  else if (padding == 0) {
-    block_amount = in_file_size / block_size;
+  if(in_file_size % block_size > 0) // in case there are more bytes but their amount less than block_size
+  {
+    block_amount++;
   }
 
-  if(in_file_size > block_size) {
+  if(in_file_size < block_size) { // needed only one block to decrypt
     block_amount = 1;
   }
 
-  unsigned char ciphered_block[block_size + AES_BLOCK_SIZE];
-  unsigned char block[block_size];
+  unsigned char ciphered_block[block_size];
+  unsigned char block[block_size + AES_BLOCK_SIZE];
 
   if(verbose)
     printf("block_amount: %d\n", block_amount);
@@ -181,9 +170,13 @@ int file_decrypt (const char *input_file_path, const char *output_file_path, con
       printf("block: %d \n", i);
 
     read_len = fread(ciphered_block, sizeof(unsigned char), block_size, input_file);
+    if(feof(input_file)) // in case header was read (last 12 bytes)
+    {
+      read_len = read_len - sizeof(struct header);
+    }
     
     if(verbose)
-      printf("read len : %d\n", read_len);
+      printf("read len : %ld\n", read_len);
     
     if(read_len == 0) {
       printf ("Bad fread ()!");
@@ -195,7 +188,7 @@ int file_decrypt (const char *input_file_path, const char *output_file_path, con
     plaintext_len = aes_decrypt(ctx, ciphered_block, read_len, block, (bool)(i == block_amount - 1));
 
     if(verbose)
-      printf("plaintext len : %d\n", plaintext_len);
+      printf("plaintext len : %ld\n", plaintext_len);
 
     crc = crc32_accum(crc, block, plaintext_len);
 
@@ -208,7 +201,7 @@ int file_decrypt (const char *input_file_path, const char *output_file_path, con
     }
 
     if(verbose)
-      printf("write_len : %d\n", write_len);
+      printf("write_len : %ld\n", write_len);
 
     memset(block, 0, block_size);
     memset(ciphered_block, 0, block_size + AES_BLOCK_SIZE);
@@ -217,15 +210,17 @@ int file_decrypt (const char *input_file_path, const char *output_file_path, con
   printf("CRC from header : %08x \n", header.crc32);
   printf("calculated CRC : %08x\n", crc);
 
-  if(header.crc32 == crc) {
-    printf("crc32 is equal!\n");
-  } else  {
-    printf("crc32 isn't equal!\n");
-  }
-
   fclose(input_file);
   fclose(output_file);
   delete_context(&ctx);
-  return EXIT_SUCCESS;
+
+  if(header.crc32 == crc) {
+    printf("crc32 is equal!\n");
+    return EXIT_SUCCESS;
+  } else  {
+    printf("crc32 isn't equal!\n");
+    return EXIT_FAILURE;
+  }
+  
 
 }
