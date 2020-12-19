@@ -10,6 +10,8 @@ It prints header on encryption completion.
 
 On decryption start, the program prints out the header. On the decryption finish it compares CRC in the header and CRC of decrypted data.
 
+By default block read is 16 bytes. This parameter could be changed by passing desired block size as an argument with key -s. Block size could be up to 8192 bytes. Block size should be as a power of 2 (16, 32, 64...8192)
+
 ----------
 ## How to build ?
 Makefile commands
@@ -34,6 +36,7 @@ For decryption:
  -o - output path
  -h - prints help 
  -v - verbose output
+ -s - block size
 
  long arguments present:
   --encrypt 
@@ -43,6 +46,7 @@ For decryption:
   --output 
   --verbose 
   --help
+  --sizeb
   ```
 
 ### Output
@@ -101,7 +105,57 @@ Usage : `./format.sh`
 
 `Ubuntu 19.10`
 
-## Untracked usecases
+--------
 
-Workability of tool wasn't tested on devices with low amount of RAM on board. In that case, tool should be optimized for working directly with files block-by-block.
+## Minor performance comparison
+
+Input file size - 100MB
+
+Encyphering when block size is default - 16 bytes
+
+``` time ./bin/ED-tool -e -i ./input.bin -o ./output.bin -k 01234567890123456789012345678901 -s 16
+Size of block is default ! 16b 
+file size : 100000000 
+block amount 6250000 
+
+ HEADER
+______________________________________________________
+
+magic number : deadbeef
+unciphered size in bytes : 100000000
+crc32 : 2142554d
+______________________________________________________
+
+real    0m29,244s
+user    0m10,194s
+sys     0m19,028s ```
+
+Encyphering when block size is 8192 bytes
+
+```time ./bin/ED-tool -e -i ./input.bin -o ./output.bin -k 01234567890123456789012345678901 -s 8192
+Size of block isn't default ! Current size : 8192 
+file size : 100000000 
+block amount 12208 
+
+ HEADER
+______________________________________________________
+
+magic number : deadbeef
+unciphered size in bytes : 100000000
+crc32 : 2142554d
+______________________________________________________
+
+real    0m0,922s
+user    0m0,595s
+sys     0m0,176s ```
+
+As we can observe, the difference is enormous !
+
+------------
+
+## Memory consumption
+
+No dynamic memory allocation. For encryption/decryption operation memory allocation is block_size + block_size + AES_BLOCK_SIZE(16).
+F.e. block_size = 256, memory consumption at least is 528 bytes.
+Increasing block_size leads to increasing the performance
 
